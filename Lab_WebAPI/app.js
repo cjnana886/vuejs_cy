@@ -29,7 +29,7 @@ app.engine('html', require('ejs').renderFile);
 app.set('views', __dirname + '/view');
 
 // 一切就緒，開始接受用戶端連線
-app.listen(80);
+app.listen(8080);
 console.log("Web伺服器就緒，開始接受用戶端連線.");
 console.log("「Ctrl + C」可結束伺服器程式.");
 
@@ -37,6 +37,7 @@ console.log("「Ctrl + C」可結束伺服器程式.");
 var mysql = require('mysql');
 var connection = mysql.createConnection({
 	host : '127.0.0.1',
+	port: '3307',
 	user : 'root',
 	password : '',
 	database : 'labDB'
