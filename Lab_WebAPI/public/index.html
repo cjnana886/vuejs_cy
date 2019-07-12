@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="css/jquery.toast.css">
     <!-- VusJS 引入 -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/jquery.toast.js"></script>
 </head>
 <body>
 
@@ -36,13 +40,13 @@
                     <span class="pull-right">
                         <button 
                             class="btn btn-info btn-xs editItem"
-                            @click="editNewsClick(item.id)"
+                            @click="editNewsClick(index)"
                         >
                             <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
                         </button>&nbsp;
                         <button 
                             class="btn btn-danger btn-xs deleteItem"
-                            @click="deleteNews(item.id)"
+                            @click="deleteNews(index)"
                         >
                             <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
                         </button>
@@ -145,7 +149,34 @@
                 textID: '',
                 action: 'edit',
             },
+            mounted() {
+                this.getNews();
+            },
             methods: {
+                // 取得內容資料
+                getNews() {
+                    $.ajax({
+                        type: "get",
+                        url: "/home/news",
+                        success: (response) => {
+                            const newsData = JSON.parse(response);
+
+                            const newsListTmp = newsData.map((item) => {
+                                const result = {
+                                    id: item.newsId,
+                                    text: item.title,
+                                    date: item.ymd,
+                                };
+                                return result;
+                            });
+                            app.newsList = newsListTmp;
+                        },
+                        error: (xhr) => {
+                            $("#newsModal").modal('hide');
+                            alert("發生錯誤: " + xhr.status + " " + xhr.statusText);
+                        },
+                    });
+                },
                 // 新增內容Dialog
                 addNewsClick() {
                     const vm = this;
@@ -163,10 +194,22 @@
                         date: vm.date,
                     };
 
-                    if (newNews.text) {
-                        vm.newsList = [...vm.newsList, newNews];
-                    }
-                    $("#newsModal").modal('hide');
+                    $.ajax({
+                        type: "post",
+                        url: "/home/news",
+                        data: {
+                            title: vm.text,
+                            ymd: vm.date,
+                        },
+                        success: (response) => {
+                            $("#newsModal").modal('hide');
+                            this.getNews();
+                        },
+                        error: (xhr) => {
+                            $("#newsModal").modal('hide');
+                            alert("發生錯誤: " + xhr.status + " " + xhr.statusText);
+                        },
+                    });
                 },
                 // 修改內容Dialog
                 editNewsClick(newsID) {
@@ -184,20 +227,46 @@
                     const vm = this;
                     vm.newsList[newsID].date = vm.date;
                     vm.newsList[newsID].text = vm.text;
-                    $("#newsModal").modal('hide');
+                    $.ajax({
+                        type: "put",
+                        url: "/home/news",
+                        data: {
+                            newsId: vm.newsList[newsID].id,
+                            title: vm.newsList[newsID].text,
+                            ymd: vm.newsList[newsID].date,
+                        },
+                        success: (resp) => {
+                            $("#newsModal").modal('hide');
+                        },
+                        error: (xhr) => {
+                            $("#newsModal").modal('hide');
+                            alert("發生錯誤: " + xhr.status + " " + xhr.statusText);
+                        },
+                    });
                 },
                 // 刪除內容
                 deleteNews(newsID) {
                     const vm = this;
-                    vm.$delete(vm.newsList, newsID);
+                    $.ajax({
+                        type: "delete",
+                        url: "/home/news",
+                        data: {
+                            newsId: vm.newsList[newsID].id
+                        },
+                        success: (response) => {
+                            vm.$delete(vm.newsList, newsID);
+                            alert('刪除成功');
+                        },
+                        error: (xhr) => {
+                            $("#newsModal").modal('hide');
+                            alert("發生錯誤: " + xhr.status + " " + xhr.statusText);
+                        },
+                    });
+
                 },
             },
         });
     </script>
-
-    <script src="js/jquery.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="js/jquery.toast.js"></script>
 
 <!-- ========== style 與 JavaScript 分隔線 ========== -->
     <style>
