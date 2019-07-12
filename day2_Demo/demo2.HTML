@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo2 Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+</head>
+<body>
+    <div class="app" id="app">
+        <span class="name-span">FirstName => </span><input v-model="firstName"><br>
+        <span class="name-span">LastName => </span><input v-model="lastName"><hr>
+        <span class="name-span">Computed Demo => </span><br>{{ fullName }}<hr>
+        <span class="name-span">Watch Demo => </span><br>{{ fullName2 }}<hr>
+        <span class="name-span">Filter Demo => </span><br>{{ fullName2 | toUpper }}<hr>
+        <span class="name-span">Component Demo => </span><span>TotalCount: {{ totalCount }}</span><br>
+            <count-button
+                :init-count="20"
+                @total="totalCount++"
+            >
+            </count-button><br>
+            <count-button
+                @total="totalCount++"
+            >
+            </count-button>
+            <hr>
+    </div>
+
+
+<script>
+    Vue.component('count-button', {
+        props: {
+            initCount: { type: Number, default: 50 },
+        },
+        data: function () {
+            return {
+                count: this.initCount,
+            }
+        },
+        template: `
+            <button @click="count++; $emit('total')">
+                點擊次數： {{ count }}
+            </button>
+        `,
+    });
+    var app = new Vue({
+        el: '#app',
+        data: {
+            firstName: '',
+            lastName: '',
+            fullName2: '',
+            count: 0,
+            totalCount: 70,
+            isColorStyle: true,
+        },
+        computed: {
+            fullName() {
+                if (this.firstName || this.lastName) {
+                    return `${this.firstName}, ${this.lastName}`;
+                }
+            }
+        },
+        watch: {
+            firstName() {
+                this.computeFullName();
+            },
+            lastName() {
+                this.computeFullName();
+            },
+        },
+        methods: {
+            computeFullName() {
+                this.fullName2 = `${this.firstName}, ${this.lastName}`;
+            },
+            addCount() {
+                this.count = this.count + 1;
+            },
+        },
+        // 比較像是數值轉換會用到 or 格式更改(Ex: 1000.222222 => 1,000.22)
+        // 原本的資料不會改變,但顯示方式改變
+        filters: {
+            toUpper(valus) {
+                return valus.toUpperCase();
+            },
+        },
+    });
+</script>
+
+<style scoped>
+.name-span {
+  color: grey;
+}
+</style>
+
+</body>
+</html>
