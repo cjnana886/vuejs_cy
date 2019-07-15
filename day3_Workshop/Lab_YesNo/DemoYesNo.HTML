@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YesNo DEMO</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container" id="yes-no-ans">
+
+        <div class="row">
+            <div class="col-sm-4"></div>
+            <div class="col-sm-4">
+                <div class="page-header">
+                        <h1>無所不問、無所不答</h1>
+                </div>
+            </div>
+        </div>
+
+        <form class="form-horizontal">
+            <fieldset>
+                <!-- Text input-->
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="question">請輸入問題:</label>
+                    <div class="col-md-4">
+                        <input
+                            id="question"
+                            name="question"
+                            type="text"
+                            v-model="questions"
+                            @input="checkInputQuestions()"
+                            :disabled="isDisabled"
+                            class="form-control input-md"
+                        >
+                        <span class="help-block">問題請以問號結尾</span>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+
+        <div class="row">
+            <div class="col-sm-4"></div>
+            <div class="col-sm-4" v-if="ans && imageUrl">
+                <h2>{{ ans | toUpper }}</h2><hr>
+                <img :src="imageUrl">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var app = new Vue({
+            el: '#yes-no-ans',
+            data: {
+                ans: '',
+                imageUrl: '',
+                questions: '',
+                isDisabled: false,
+            },
+            methods: {
+                // 輸入問題檢查 Yes or No
+                checkInputQuestions() {
+                    const vm = this;
+                    if (vm.questions.indexOf('?') > -1) {
+                        vm.isDisabled = true;
+                        axios
+                            .get('https://yesno.wtf/api')
+                            .then((resp) => {
+                                vm.ans = (resp.data.answer === 'yes') ? 
+                                    `good questions！！` : `so bad！！`;
+                                vm.imageUrl = resp.data.image;
+                                vm.isDisabled = false;
+                            })
+                            .catch((error) => {
+                                console.log(error);
+                            });
+                    }
+                },
+            },
+            filters: {
+                toUpper(valus) {
+                    return valus.toUpperCase();
+                },
+            },
+        });
+    </script>
+
+</body>
+
+</html>
