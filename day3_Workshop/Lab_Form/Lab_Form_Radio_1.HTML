@@ -15,28 +15,32 @@
     <fieldset>
     
     <!-- Form Name -->
-    <legend>Lab Form</legend>
+    <legend>血型清單</legend>
     
     <!-- Multiple Radios (inline) -->
-    <div class="form-group">
+    <div class="form-group" id='radio-div'>
       <label class="col-md-4 control-label" for="bloodType">Blood type:</label>
       <div class="col-md-4"> 
         <label class="radio-inline" for="bloodType-0">
-          <input type="radio" name="bloodType" id="bloodType-0" value="1" checked="checked">
+          <input type="radio" v-model="currBloodType" name="bloodType" id="bloodType-0" value="1" checked="checked">
           A
         </label> 
         <label class="radio-inline" for="bloodType-1">
-          <input type="radio" name="bloodType" id="bloodType-1" value="2" checked>
+          <input type="radio" v-model="currBloodType" name="bloodType" id="bloodType-1" value="2" checked>
           B
         </label> 
         <label class="radio-inline" for="bloodType-2">
-          <input type="radio" name="bloodType" id="bloodType-2" value="3">
+          <input type="radio" v-model="currBloodType" name="bloodType" id="bloodType-2" value="3">
           AB
         </label> 
         <label class="radio-inline" for="bloodType-3">
-          <input type="radio" name="bloodType" id="bloodType-3" value="4">
+          <input type="radio" v-model="currBloodType" name="bloodType" id="bloodType-3" value="4">
           O
         </label>
+      </div>
+      <hr>
+      <div class="col-md-4"> 
+        <H2>當前血型: {{ bloodTypeName[currBloodType - 1] }}型</H2>
       </div>
     </div>
     
@@ -46,7 +50,17 @@
 
 <script>
 
-
+  var app = new Vue({
+    el:'#radio-div',
+    data: {
+      currBloodType: 1,
+      bloodTypeName: ['A', 'B', 'AB', 'O'],
+    },
+    mounted() {
+      const vm = this;
+      vm.currBloodType = 2;
+    },
+  });
 
 </script>
 
