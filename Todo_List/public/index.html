@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>To-Do List</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/jquery.toast.css">
+    <!-- VusJS 引入 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+    <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/jquery.toast.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <h2>{{ toDoListTitle }}</h2>
+            <hr>
+            <!-- 新增代辦內容 -->
+            <div class="add-todo-div">
+                <span>新增代辦內容: </span>
+                <input 
+                    class="add-todo-input"
+                    v-model="toDoContent"
+                >
+                <!-- Add To-do -->
+                <span class="pull-right">
+                    <button 
+                        id="add-todo"
+                        class="btn btn-success btn-sm"
+                        @click="addToDo()"
+                    >
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                    </button>
+                </span>
+            </div>
+            <!-- 待辦清單列表內容 -->
+            <div class="todo-list-div">
+                <!-- 過濾內容 -->
+                <div class="btn-group btn-group-toggle">
+                    <label class="radio-inline" for="bloodType-1">
+                        <input
+                            type="radio"
+                            v-model="optionsToDo"
+                            name="bloodType"
+                            id="bloodType-1"
+                            value="1"
+                            checked="checked"
+                        >
+                            全部 ( {{ allCount }} )
+                    </label> 
+                    <label class="radio-inline" for="bloodType-2">
+                        <input
+                            type="radio"
+                            v-model="optionsToDo"
+                            name="bloodType"
+                            id="bloodType-2"
+                            value="2"
+                            checked
+                        >
+                            未完成 ( {{ undoneCount }} )
+                    </label> 
+                    <label class="radio-inline" for="bloodType-3">
+                        <input
+                            type="radio"
+                            v-model="optionsToDo"
+                            name="bloodType"
+                            id="bloodType-3"
+                            value="3"
+                            checked
+                        >
+                            已完成 ( {{ doneCount }} )
+                    </label>
+                </div>
+                <!-- 待辦清單 -->
+                <ul id="latestNews" class="list-group">
+                    <li 
+                        class="list-group-item"
+                        v-for="(item, index) in toDoList"
+                        :class="{'done-style':  item.isDone}"
+                        v-if="item.content"
+                    >
+                        <div class="row" >
+                            <div class="col-xs-1" id="checkbox-div">
+                                <!-- 勾選完成 -->
+                                <input
+                                    type="checkbox"
+                                    class="custom-control-input"
+                                    id="defaultUnchecked"
+                                    :checked="item.isDone"
+                                    @click="changeDone(index)"
+                                >
+                            </div>
+                            <div class="col-xs-9">
+                                <!-- 修改代辦內容 -->
+                                <input
+                                    class="edit-todo-intput"
+                                    v-if="item.isEdit === true"
+                                    v-model="editContent"
+                                >
+                                <!-- 代辦內容 -->
+                                <span 
+                                    v-if="item.isEdit === false"
+                                    :class="{'done-style':  item.isDone}"
+                                >
+                                    {{ item.content }}
+                                </span>
+                            </div>
+                            <div class="col-xs-2">
+                                <span class="pull-right">
+                                    <!-- 確認 -->
+                                    <button v-if="editContent && currEditID === index" class="btn btn-info btn-xs okItem">
+                                        <span 
+                                            class="glyphicon glyphicon-ok"
+                                            aria-hidden="true"
+                                            @click="editTodoContent(index)"
+                                        ></span>
+                                    </button>&nbsp;
+                                    <!-- 修改筆 -->
+                                    <button v-if="!item.isDone && !editContent" class="btn btn-info btn-xs editItem">
+                                        <span 
+                                            class="glyphicon glyphicon-pencil"
+                                            aria-hidden="true"
+                                            @click="editTodoContentClick(index)"
+                                        ></span>
+                                    </button>&nbsp;
+                                    <!-- 刪除 -->
+                                    <button 
+                                        class="btn btn-danger btn-xs deleteItem"
+                                        @click="deleteTodoContent(index)"
+                                    >
+                                        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>  <!-- end of row -->
+</div> <!-- end of container -->
+
+
+
+<!-- ========== UI 與 JavaScript 分隔線 ========== -->
+    <script>
+        var app = new Vue({
+            el: '.container',
+            data: {
+                toDoListTitle: '待辦事項',
+                originToDoList: [],
+                toDoList: [
+                    { content: '煮飯', isDone: true, isEdit: false },
+                    { content: '打掃', isDone: false, isEdit: false },
+                    { content: '運動', isDone: true, isEdit: false },
+                    { content: '看電視', isDone: true, isEdit: false },
+                    { content: '睡前盥洗', isDone: false, isEdit: false },
+                    { content: '上床睡覺', isDone: false, isEdit: false },
+                ],
+                // 輸入內容
+                toDoContent: '',
+                allCount: 0,
+                doneCount: 0,
+                undoneCount: 0,
+                // 選擇查看全部or完成or未完成
+                optionsToDo: 1,
+                // 修改代辦內容
+                editContent: '',
+                currEditID: 0,
+            },
+            watch: {
+                optionsToDo() {
+                    const vm = this;
+                    vm.filterToDoList(vm.optionsToDo);
+                }
+            },
+            mounted() {
+                const vm = this;
+                vm.originToDoList = vm.toDoList;
+                vm.countStatus();
+            },
+            methods: {
+                // 監聽點擊修改的代辦內容
+                editTodoContentClick(idx) {
+                    const vm = this;
+                    if (vm.editContent === '') {
+                        vm.toDoList[idx].isEdit = true;
+                        vm.editContent = vm.toDoList[idx].content;
+                        vm.currEditID = idx;
+                    }
+                },
+                // 修改代辦內容
+                editTodoContent(idx) {
+                    const vm = this;
+                    vm.toDoList[idx].content = vm.editContent;
+                    vm.toDoList[idx].isEdit = false;
+                    vm.editContent = '';
+                },
+                // 選擇撈取條件
+                filterToDoList(chose) {
+                    const vm = this;
+                    let toDoListTmp =[ ];
+                    if (chose > 1) {
+                        const toDoListTmp =  vm.originToDoList.map((item) => {
+                            if (item.isDone && chose == 3 && item.content) {
+                                return item
+                            } else if (!item.isDone && chose == 2 && item.content) {
+                                return item
+                            }
+                            return {};
+                        });
+                        vm.toDoList = [...toDoListTmp];
+                    } else {
+                        vm.toDoList = [...vm.originToDoList];
+                    }
+                },
+                // 新增代辦內容
+                addToDo() {
+                    const vm = this;
+                    const newContent = {
+                        content: vm.toDoContent,
+                        isDone: false,
+                        isEdit: false
+                    };
+
+                    vm.toDoList = [...vm.toDoList, newContent];
+                    vm.originToDoList = [...vm.originToDoList, newContent];
+                    alert(`已新增代辦事項: ${vm.toDoContent}`);
+                    vm.toDoContent = '';
+                    this.countStatus();
+                },
+                // 刪除代辦內容
+                deleteTodoContent(idx) {
+                    const vm = this;
+                    vm.$delete(vm.toDoList, idx);
+                    vm.$delete(vm.originToDoList, idx);
+                    this.countStatus();
+                },
+                // 代辦內容狀態更改
+                changeDone(idx) {
+                    const vm = this;
+                    const originStatus = vm.toDoList[idx].isDone;
+                    vm.toDoList[idx].isDone = !originStatus;
+                    this.countStatus();
+                },
+                // 計算狀態數量
+                countStatus() {
+                    const vm = this;
+                    vm.doneCount = 0;
+                    vm.undoneCount = 0;
+                    vm.allCount = 0
+
+                    // 完成與未完成
+                    vm.originToDoList.map((item) => {
+                        if (item.content) {
+                            // 總數
+                            vm.allCount = vm.allCount + 1;
+                            // 已完成
+                            if (item.isDone) {
+                                vm.doneCount = vm.doneCount + 1;
+                            }
+                            // 未完成
+                            vm.undoneCount = vm.allCount - vm.doneCount;
+                        }
+                    });
+                }
+            },
+        });
+    </script>
+
+<!-- ========== style 與 JavaScript 分隔線 ========== -->
+    <style>
+        .modal-header, h4, .close {
+            background-color: #5cb85c;
+            color: white;
+            text-align: center;
+            font-size: 2em;
+        }
+
+        .modal-footer {
+            background-color: #f9f9f9;
+        }
+
+        /* 新增 */
+        .add-todo-input {
+            width: 75%;
+        }
+
+        /* 列表 */
+        .todo-list-div {
+            margin: 10px 0 0 0;
+        }
+
+        #allBtn {
+            background-color: gray;
+            color: #fff;
+        }
+
+        .done-style {
+            text-decoration: line-through;
+            background-color: #5cb85c;
+        }
+
+        /* 修改 */
+        .edit-todo-intput {
+            width: 100%;
+        }
+
+        #checkbox-div {
+            width: 10px;
+        }
+     </style>
+</body>
+</html>
